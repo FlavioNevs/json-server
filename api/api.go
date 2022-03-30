@@ -8,14 +8,21 @@ import (
 )
 
 type Api struct {
-	db *database.Database
+	db        *database.Database
+	endpoints []Endpoint
 }
 
-func ApiFactory(db *database.Database) Api {
-	return Api{db}
+func ApiFactory(jsonfile string) Api {
+
+	db := database.DatabaseFactory(jsonfile)
+	var endpoints []Endpoint
+	for _, value := range db.Tables {
+		endpoints = append(endpoints, EndpointFactory(value, &db))
+	}
+	return Api{&db, endpoints}
 }
 
-func ValidPort(port string) error {
+func ValidatePort(port string) error {
 	if _, err := strconv.Atoi(port); err != nil {
 		return fmt.Errorf("invalid port")
 	}

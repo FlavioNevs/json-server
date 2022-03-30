@@ -3,13 +3,18 @@ package main
 import (
 	"fmt"
 	"json-server/api"
+	"json-server/database"
+	"net/http"
 	"os"
+	"time"
 )
 
 var (
 	BASE_DIR string
 	Port     string
 	JsonFile string
+	Api      api.Api
+	Db       database.Database
 )
 
 func init() {
@@ -20,22 +25,34 @@ func init() {
 	}
 	BASE_DIR = base_dir
 
+	// Setting JsonFile Path
 	fmt.Print("Json File: ")
 	fmt.Scan(&JsonFile)
 	if err := FindFile(&JsonFile); err != nil {
 		panic(err)
 	}
 
+	// Setting API Port
 	fmt.Print("Port: ")
 	fmt.Scan(&Port)
-	if err = api.ValidPort(Port); err != nil {
+	if err = api.ValidatePort(Port); err != nil {
 		panic(err)
 	}
-
 }
 
 func main() {
-	fmt.Println(JsonFile)
+	PrintLabel()
+	Api = api.ApiFactory(JsonFile)
+	http.ListenAndServe(":"+Port, Api.RouterFactory())
+}
+
+func PrintLabel() {
+	fmt.Print("\033[H\033[2J")
+	fmt.Println(time.Now().Format("January 02, 2006 - 15:04:05"))
+	fmt.Println("Creating endpoints from " + JsonFile)
+	fmt.Println("Starting development server at http://127.0.0.1:" + Port + "/")
+	fmt.Println("Quit the server with CTRL-BREAK.")
+	fmt.Println("")
 }
 
 func FindFile(filepath *string) error {
